@@ -175,7 +175,7 @@ public class ErrorHandler {
                 "Неверно переданы данные по пути.", "BAD_REQUEST", LocalDateTime.now()),
                 HttpStatus.BAD_REQUEST);
     }
-    //ConstraintViolationException
+
     @ExceptionHandler
     public ResponseEntity<ErrorResponse> emailAlreadyExists(DataIntegrityViolationException e) {
         log.info("Почта уже занята. {}", e.getMessage());
@@ -184,6 +184,7 @@ public class ErrorHandler {
                 "Почта занята.", "CONFLICT", LocalDateTime.now()),
                 HttpStatus.CONFLICT);
     }
+
     @ExceptionHandler
     public ResponseEntity<ErrorResponse> serverException(Throwable e) {
         log.info("Ошибка на сервере. {}", e.getMessage());

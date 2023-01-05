@@ -20,7 +20,6 @@ import ru.practicum.services.admin_service.service.AdminEventService;
 import ru.practicum.services.private_service.repository.PrivateEventsRepository;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 

@@ -18,7 +18,6 @@ import ru.practicum.services.public_service.service.PublicEventService;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
