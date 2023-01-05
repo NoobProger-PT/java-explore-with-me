@@ -30,28 +30,26 @@ public class Event {
     private Category category;
     @Column(name = "event_Date", nullable = false)
     private LocalDateTime eventDate;
-    @ManyToOne
-    @JoinColumn(name = "location_id")
+    @AttributeOverrides({
+            @AttributeOverride(name = "lat", column = @Column(name = "lat")),
+            @AttributeOverride(name = "lon", column = @Column(name = "lon"))
+    })
     private Location location;
     @Column(name = "paid")
-    private Boolean paid;
+    private boolean paid;
     @Column(name = "participant_Limit")
-    private Integer participantLimit;
+    private int participantLimit;
     @Column(name = "request_Moderation")
-    private Boolean requestModeration;
+    private boolean requestModeration;
     @Column(name = "title", nullable = false)
     private String title;
-    @Column(name = "confirmed_Requests")
-    private int confirmedRequests;
     @Column(name = "created_On")
     private LocalDateTime createdOn;
     @Column(name = "published_On")
     private LocalDateTime publishedOn;
     @Column(name = "state")
     private State state;
-    @Column(name = "views")
-    private int views;
     @ManyToOne
-    @JoinColumn(name = "user_id")
-    private User user;
+    @JoinColumn(name = "initiator_id")
+    private User initiator;
 }

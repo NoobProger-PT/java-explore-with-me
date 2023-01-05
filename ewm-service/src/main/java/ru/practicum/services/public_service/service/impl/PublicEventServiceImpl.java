@@ -1,28 +1,20 @@
-package ru.practicum.services.public_service.service;
+package ru.practicum.services.public_service.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import ru.practicum.category.dto.CategoryDto;
-import ru.practicum.category.mapper.CategoryMapper;
 import ru.practicum.category.model.Category;
 import ru.practicum.client.EventClient;
-import ru.practicum.compilation.dto.CompilationDto;
-import ru.practicum.compilation.mapper.CompilationMapper;
-import ru.practicum.compilation.model.Compilation;
 import ru.practicum.event.State;
 import ru.practicum.event.dto.EndPointHitDto;
 import ru.practicum.event.dto.EventFullDto;
 import ru.practicum.event.mapper.EventMapper;
 import ru.practicum.event.model.Event;
-import ru.practicum.exception.category_exception.CategoryNotFoundException;
-import ru.practicum.exception.compilation.CompilationNutFoundException;
 import ru.practicum.exception.event_exception.EventNotFoundException;
 import ru.practicum.services.admin_service.repository.AdminCategoryRepository;
-import ru.practicum.services.admin_service.repository.AdminCompilationRepository;
 import ru.practicum.services.private_service.repository.PrivateEventsRepository;
-
+import ru.practicum.services.public_service.service.PublicEventService;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
@@ -32,18 +24,15 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class PublicServiceImpl implements PublicService {
+public class PublicEventServiceImpl implements PublicEventService {
 
+    private final EventClient eventClient;
     private final PrivateEventsRepository eventsRepository;
     private final AdminCategoryRepository categoryRepository;
-    private final AdminCompilationRepository compilationRepository;
-    private final EventClient eventClient;
-
-    DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @Override
     public List<EventFullDto> getEvents(String text, List<Long> categories, boolean paid,
-                                        String rangeStart, String rangeEnd, boolean onlyAvailable,
+                                        LocalDateTime rangeStart, LocalDateTime rangeEnd, boolean onlyAvailable,
                                         String sort, int from, int size, HttpServletRequest request) {
         PageRequest pageRequest;
         LocalDateTime startDate;
@@ -60,12 +49,12 @@ public class PublicServiceImpl implements PublicService {
         if (rangeStart == null) {
             startDate = LocalDateTime.now();
         } else {
-            startDate = LocalDateTime.parse(rangeStart, dateTimeFormatter);
+            startDate = rangeStart;
         }
         if (rangeEnd == null) {
             endDate = LocalDateTime.MAX;
         } else {
-            endDate = LocalDateTime.parse(rangeEnd, dateTimeFormatter);
+            endDate = rangeEnd;
         }
 
         List<Category> categoryList = categoryRepository.findAllById(categories);
@@ -79,14 +68,14 @@ public class PublicServiceImpl implements PublicService {
 
         if (onlyAvailable) {
             sortedEventList = events.stream()
-                    .filter(e -> e.getPaid() == paid
-                            && e.getConfirmedRequests() < e.getParticipantLimit()
+                    .filter(e -> e.isPaid() == paid
+                            //&& e.getConfirmedRequests() < e.getParticipantLimit()
                             && e.getEventDate().isAfter(startDate)
                             && e.getEventDate().isBefore(endDate))
                     .collect(Collectors.toList());
         } else {
             sortedEventList = events.stream()
-                    .filter(e -> e.getPaid() == paid
+                    .filter(e -> e.isPaid() == paid
                             && e.getEventDate().isAfter(startDate)
                             && e.getEventDate().isBefore(endDate))
                     .collect(Collectors.toList());
@@ -101,9 +90,9 @@ public class PublicServiceImpl implements PublicService {
         endPointHitDto.setIp(request.getRemoteAddr());
         endPointHitDto.setUri(request.getRequestURI());
 
-        for (Event event : sortedEventList) {
-            event.setViews(event.getViews() + 1);
-        }
+//        for (Event event : sortedEventList) {
+//            event.setViews(event.getViews() + 1);
+//        }
 
         eventClient.add(endPointHitDto);
 
@@ -117,48 +106,8 @@ public class PublicServiceImpl implements PublicService {
         endPointHitDto.setApp("mainService");
         endPointHitDto.setIp(request.getRemoteAddr());
         endPointHitDto.setUri(request.getRequestURI());
-        event.setViews(event.getViews() + 1);
+        //event.setViews(event.getViews() + 1);
         eventClient.add(endPointHitDto);
         return EventMapper.mapToEventFullDtoFromEvent(event);
-    }
-
-    @Override
-    public List<CompilationDto> getCompilations(boolean pinned, int from, int size) {
-        List<CompilationDto> result;
-        if (pinned) {
-            result = compilationRepository.findAllByPinned(true,
-                            PageRequest.of(from, size, Sort.by("id").ascending())).stream()
-                    .map(CompilationMapper::mapToCompilationDtoFromCompilation)
-                    .collect(Collectors.toList());
-        } else {
-            result = compilationRepository.findAll(
-                    PageRequest.of(from, size, Sort.by("id").ascending())).stream()
-                    .map(CompilationMapper::mapToCompilationDtoFromCompilation)
-                    .collect(Collectors.toList());
-        }
-        return result;
-    }
-
-    @Override
-    public CompilationDto getCompilationById(long complId) {
-        Compilation compilation = compilationRepository.findById(complId).orElseThrow(
-                () -> new CompilationNutFoundException("Такой подборки не существует"));
-        return CompilationMapper.mapToCompilationDtoFromCompilation(compilation);
-    }
-
-    @Override
-    public List<CategoryDto> getCategories(int from, int size) {
-        List<CategoryDto> result = categoryRepository.findAll(
-                PageRequest.of(from, size, Sort.by("id").ascending())).stream()
-                .map(CategoryMapper::mapToCategoryDto)
-                .collect(Collectors.toList());
-        return result;
-    }
-
-    @Override
-    public CategoryDto getCategory(long catId) {
-        Category category = categoryRepository.findById(catId).orElseThrow(
-                () -> new CategoryNotFoundException("категория не найдена"));
-        return CategoryMapper.mapToCategoryDto(category);
     }
 }

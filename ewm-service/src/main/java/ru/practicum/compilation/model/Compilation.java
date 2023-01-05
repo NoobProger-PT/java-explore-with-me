@@ -20,6 +20,9 @@ public class Compilation {
     private long id;
 
     @ManyToMany
+    @JoinTable(name = "compilations_events",
+    joinColumns = @JoinColumn(name = "compilation_id"),
+    inverseJoinColumns = @JoinColumn(name = "events_id"))
     private List<Event> events;
 
     @Column(name = "pinned")

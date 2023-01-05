@@ -13,7 +13,7 @@ public class NewUserDto {
 
     @NotBlank
     private String name;
-    @NotNull
+    @NotBlank
     @Email
     private String email;
 }

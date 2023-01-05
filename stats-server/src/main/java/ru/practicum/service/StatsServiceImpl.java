@@ -10,11 +10,8 @@ import ru.practicum.model.EndPointHit;
 import ru.practicum.repository.StatsRepository;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -23,58 +20,60 @@ public class StatsServiceImpl implements StatsService {
 
     private final StatsRepository repository;
 
-    DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
     @Override
-    public List<ViewStatsDto> getStats(String start, String end, List<String> uris, boolean unique) {
+    public List<ViewStatsDto> getStats(LocalDateTime start, LocalDateTime end, List<String> uris, boolean unique) {
 
         LocalDateTime startTime;
         LocalDateTime endTime;
-        Set<String> ips = new HashSet<>();
-        List<EndPointHit> uniqIp = new ArrayList<>();
         List<ViewStatsDto> result = new ArrayList<>();
+        Set<String> uniqIp = new HashSet<>();
 
         if (start != null) {
-            startTime = LocalDateTime.parse(start, dateTimeFormatter);
+            startTime = start;
         } else {
             startTime = LocalDateTime.now();
         }
         if (end != null) {
-            endTime = LocalDateTime.parse(end, dateTimeFormatter);
+            endTime = end;
         } else {
             endTime = LocalDateTime.MAX;
         }
 
+        List<EndPointHit> endPointHits = repository.findAllByTimeStampBetween(startTime, endTime);
+
+        if (endPointHits.size() == 0) {
+            return List.of();
+        }
+
         if (unique) {
             for (String uri : uris) {
-                List<EndPointHit> endPointHits = repository
-                        .findAllByUriContainingIgnoreCaseAndTimeStampAfterAndTimeStampBefore(uri, startTime, endTime);
-                if (endPointHits.size() == 0) {
-                    return List.of();
-                }
-                for (EndPointHit e : endPointHits) {
-                    if (!ips.contains(e.getIp())) {
-                        ips.add(e.getIp());
-                        uniqIp.add(e);
-                    }
-                }
+                List<EndPointHit> sortHits = endPointHits.stream()
+                        .filter(h -> h.getUri().contains(uri))
+                        .map(h -> {
+                            if (!uniqIp.contains(h.getIp())) {
+                                uniqIp.add(h.getIp());
+                            }
+                            return h;
+                        })
+                        .collect(Collectors.toList());
+                long hits = uniqIp.size();
                 ViewStatsDto viewStatsDto = new ViewStatsDto();
-                viewStatsDto.setHits(uniqIp.size());
+                viewStatsDto.setHits(hits);
                 viewStatsDto.setUri(uri);
-                viewStatsDto.setApp(endPointHits.get(0).getApp());
+                viewStatsDto.setApp(sortHits.get(0).getApp());
                 result.add(viewStatsDto);
+                uniqIp.clear();
             }
         } else {
             for (String uri : uris) {
-                List<EndPointHit> endPointHits = repository
-                        .findAllByUriContainingIgnoreCaseAndTimeStampAfterAndTimeStampBefore(uri, startTime, endTime);
-                if (endPointHits.size() == 0) {
-                    return List.of();
-                }
+                List<EndPointHit> sortHits = endPointHits.stream()
+                        .filter(h -> h.getUri().contains(uri))
+                        .collect(Collectors.toList());
+                long hits = sortHits.size();
                 ViewStatsDto viewStatsDto = new ViewStatsDto();
-                viewStatsDto.setHits(endPointHits.size());
+                viewStatsDto.setHits(hits);
                 viewStatsDto.setUri(uri);
-                viewStatsDto.setApp(endPointHits.get(0).getApp());
+                viewStatsDto.setApp(sortHits.get(0).getApp());
                 result.add(viewStatsDto);
             }
         }

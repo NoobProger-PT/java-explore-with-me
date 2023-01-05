@@ -13,9 +13,9 @@ import java.util.Optional;
 
 public interface PrivateEventsRepository extends JpaRepository<Event, Long> {
 
-    Page<Event> findAllByUserId(long userId, Pageable pageable);
+    Page<Event> findAllByInitiatorId(long userId, Pageable pageable);
 
-    Optional<Event> findByIdAndUserId(long eventId, long userId);
+    Optional<Event> findByIdAndInitiatorId(long eventId, long userId);
 
     List<Event> findAllByCategoryId(long catId);
 
@@ -25,5 +25,5 @@ public interface PrivateEventsRepository extends JpaRepository<Event, Long> {
                                                                                           State state,
                                                                                           Pageable pageable);
 
-    List<Event> findAllByUserIdIn(List<Long> users, Pageable pageable);
+    List<Event> findAllByInitiatorIdIn(List<Long> users, Pageable pageable);
 }

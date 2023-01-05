@@ -3,6 +3,7 @@ package ru.practicum.exception;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -174,7 +175,15 @@ public class ErrorHandler {
                 "Неверно переданы данные по пути.", "BAD_REQUEST", LocalDateTime.now()),
                 HttpStatus.BAD_REQUEST);
     }
-
+    //ConstraintViolationException
+    @ExceptionHandler
+    public ResponseEntity<ErrorResponse> emailAlreadyExists(DataIntegrityViolationException e) {
+        log.info("Почта уже занята. {}", e.getMessage());
+        String exceptionName = e.getClass().getName();
+        return new ResponseEntity<>(new ErrorResponse(List.of(exceptionName), e.getMessage(),
+                "Почта занята.", "CONFLICT", LocalDateTime.now()),
+                HttpStatus.CONFLICT);
+    }
     @ExceptionHandler
     public ResponseEntity<ErrorResponse> serverException(Throwable e) {
         log.info("Ошибка на сервере. {}", e.getMessage());

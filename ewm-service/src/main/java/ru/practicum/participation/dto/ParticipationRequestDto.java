@@ -7,7 +7,6 @@ import lombok.Setter;
 import ru.practicum.participation.Status;
 
 import javax.validation.constraints.FutureOrPresent;
-import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 @Setter
@@ -15,7 +14,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class ParticipationRequestDto {
 
-    @NotNull
     @FutureOrPresent
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime created;
