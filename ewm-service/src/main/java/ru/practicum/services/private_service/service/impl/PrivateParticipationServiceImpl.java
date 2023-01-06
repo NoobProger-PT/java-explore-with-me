@@ -49,7 +49,7 @@ public class PrivateParticipationServiceImpl implements PrivateParticipationServ
         ParticipationRequest participationRequest = participationRepository.findById(reqId).orElseThrow(() ->
                 new ParticipationNotFoundException("Заявка с id: " + reqId + " не найдена"));
         participationRequest.setStatus(Status.CONFIRMED);
-//        event.setConfirmedRequests(event.getConfirmedRequests() + 1);
+        event.setConfirmedRequests(event.getConfirmedRequests() + 1);
         return ParticipationMapper.mapParticipationRequestDtoFromParticipationRequest(participationRequest);
     }
 
@@ -87,18 +87,18 @@ public class PrivateParticipationServiceImpl implements PrivateParticipationServ
         if (participationRepository.findByEventAndRequester(eventId, userId).isPresent()) {
             throw new ParticipationAlreadyExistsException("Запрос уже был создан.");
         }
-//        if (event.getParticipantLimit() == event.getConfirmedRequests()) {
-//            throw new InvalidParticipationException("Свободных мест не осталось");
-//        }
+        if (event.getParticipantLimit() == event.getConfirmedRequests()) {
+            throw new InvalidParticipationException("Свободных мест не осталось");
+        }
         ParticipationRequest participationRequest = new ParticipationRequest();
         participationRequest.setRequester(userId);
         participationRequest.setEvent(eventId);
         participationRequest.setCreated(LocalDateTime.now());
-//        if (!event.getRequestModeration()) {
-//            participationRequest.setStatus(Status.CONFIRMED);
-//        } else {
+        if (!event.isRequestModeration()) {
+            participationRequest.setStatus(Status.CONFIRMED);
+        } else {
         participationRequest.setStatus(Status.PENDING);
-//        }
+        }
 
         ParticipationRequest savedParticipation = participationRepository.save(participationRequest);
         return ParticipationMapper.mapParticipationRequestDtoFromParticipationRequest(savedParticipation);

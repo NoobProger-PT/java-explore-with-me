@@ -37,11 +37,11 @@ public class EventMapper {
         eventFullDto.setParticipantLimit(event.getParticipantLimit());
         eventFullDto.setRequestModeration(event.isRequestModeration());
         eventFullDto.setTitle(event.getTitle());
-        //eventFullDto.setConfirmedRequests(event.getConfirmedRequests());
+        eventFullDto.setConfirmedRequests(event.getConfirmedRequests());
         eventFullDto.setCreatedOn(event.getCreatedOn());
         eventFullDto.setPublishedOn(event.getPublishedOn());
         eventFullDto.setState(event.getState());
-        //eventFullDto.setViews(event.getViews());
+        eventFullDto.setViews(event.getViews());
         eventFullDto.setInitiator(UserMapper.mapToUserShortDto(event.getInitiator()));
         return eventFullDto;
     }
@@ -50,13 +50,13 @@ public class EventMapper {
         EventShortDto eventShortDto = new EventShortDto();
         eventShortDto.setAnnotation(event.getAnnotation());
         eventShortDto.setCategory(CategoryMapper.mapToCategoryDto(event.getCategory()));
-        //eventShortDto.setConfirmedRequests(event.getConfirmedRequests());
+        eventShortDto.setConfirmedRequests(event.getConfirmedRequests());
         eventShortDto.setEventDate(event.getEventDate());
         eventShortDto.setId(event.getId());
         eventShortDto.setInitiator(UserMapper.mapToUserShortDto(event.getInitiator()));
         eventShortDto.setPaid(event.isPaid());
         eventShortDto.setTitle(event.getTitle());
-        //eventShortDto.setViews(event.getViews());
+        eventShortDto.setViews(event.getViews());
         return eventShortDto;
     }
 }

@@ -42,7 +42,9 @@ public class StatsServiceImpl implements StatsService {
         List<EndPointHit> endPointHits = repository.findAllByTimeStampBetween(startTime, endTime);
 
         if (endPointHits.size() == 0) {
-            return List.of();
+            List<ViewStatsDto> emptyList = new ArrayList<>();
+            emptyList.add(new ViewStatsDto());
+            return emptyList;
         }
 
         if (unique) {

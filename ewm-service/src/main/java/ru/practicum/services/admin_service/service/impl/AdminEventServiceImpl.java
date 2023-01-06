@@ -10,7 +10,6 @@ import ru.practicum.event.State;
 import ru.practicum.event.dto.AdminUpdateEventRequest;
 import ru.practicum.event.dto.EventFullDto;
 import ru.practicum.event.location.mapper.LocationMapper;
-import ru.practicum.event.location.model.Location;
 import ru.practicum.event.mapper.EventMapper;
 import ru.practicum.event.model.Event;
 import ru.practicum.exception.category_exception.CategoryNotFoundException;
@@ -64,13 +63,13 @@ public class AdminEventServiceImpl implements AdminEventService {
                         && e.getEventDate().isBefore(endDate))
                 .map(EventMapper::mapToEventFullDtoFromEvent)
                 .collect(Collectors.toList());
+
         return result;
     }
 
     @Override
     @Transactional
     public EventFullDto updateEvent(long eventId, AdminUpdateEventRequest adminUpdateEventRequest) {
-        Location location;
         Event event = eventsRepository.findById(eventId)
                 .orElseThrow(() -> new EventNotFoundException("ивент не найден"));
         event.setAnnotation(adminUpdateEventRequest.getAnnotation());

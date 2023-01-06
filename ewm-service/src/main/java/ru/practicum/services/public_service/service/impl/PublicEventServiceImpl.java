@@ -68,7 +68,7 @@ public class PublicEventServiceImpl implements PublicEventService {
         if (onlyAvailable) {
             sortedEventList = events.stream()
                     .filter(e -> e.isPaid() == paid
-                            //&& e.getConfirmedRequests() < e.getParticipantLimit()
+                            && e.getConfirmedRequests() < e.getParticipantLimit()
                             && e.getEventDate().isAfter(startDate)
                             && e.getEventDate().isBefore(endDate))
                     .collect(Collectors.toList());
@@ -89,9 +89,9 @@ public class PublicEventServiceImpl implements PublicEventService {
         endPointHitDto.setIp(request.getRemoteAddr());
         endPointHitDto.setUri(request.getRequestURI());
 
-//        for (Event event : sortedEventList) {
-//            event.setViews(event.getViews() + 1);
-//        }
+        for (Event event : sortedEventList) {
+            event.setViews(event.getViews() + 1);
+        }
 
         eventClient.add(endPointHitDto);
 
@@ -105,7 +105,7 @@ public class PublicEventServiceImpl implements PublicEventService {
         endPointHitDto.setApp("mainService");
         endPointHitDto.setIp(request.getRemoteAddr());
         endPointHitDto.setUri(request.getRequestURI());
-        //event.setViews(event.getViews() + 1);
+        event.setViews(event.getViews() + 1);
         eventClient.add(endPointHitDto);
         return EventMapper.mapToEventFullDtoFromEvent(event);
     }

@@ -8,6 +8,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.List;
 import java.util.Map;
 
+import static org.springframework.http.HttpMethod.GET;
 import static org.springframework.http.HttpMethod.POST;
 
 public class BaseClient {
@@ -20,6 +21,10 @@ public class BaseClient {
 
     protected <T> ResponseEntity<Object> post(String path, T body) {
         return makeAndSendRequest(POST, path, null, body);
+    }
+
+    protected ResponseEntity<Object> get(String path, @Nullable Map<String, Object> parameters) {
+        return makeAndSendRequest(GET, path, null, parameters);
     }
 
     private <T> ResponseEntity makeAndSendRequest(HttpMethod method, String path, @Nullable Map<String,
