@@ -10,7 +10,6 @@ import org.springframework.web.util.DefaultUriBuilderFactory;
 import ru.practicum.event.dto.EndPointHitDto;
 
 import java.util.List;
-import java.util.Map;
 
 @Service
 public class EventClient extends BaseClient {
