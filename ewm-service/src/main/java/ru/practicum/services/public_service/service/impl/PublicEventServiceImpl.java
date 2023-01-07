@@ -78,7 +78,6 @@ public class PublicEventServiceImpl implements PublicEventService {
         if (onlyAvailable) {
             sortedEventList = events.stream()
                     .filter(e -> e.isPaid() == paid
-                            && e.getConfirmedRequests() < e.getParticipantLimit()
                             && e.getEventDate().isAfter(startDate)
                             && e.getEventDate().isBefore(endDate))
                     .collect(Collectors.toList());

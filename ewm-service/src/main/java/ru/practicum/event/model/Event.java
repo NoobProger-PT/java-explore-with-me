@@ -52,8 +52,4 @@ public class Event {
     @ManyToOne
     @JoinColumn(name = "initiator_id")
     private User initiator;
-    @Column(name = "views")
-    private int views;
-    @Column(name = "confirmed_Requests")
-    private int confirmedRequests;
 }

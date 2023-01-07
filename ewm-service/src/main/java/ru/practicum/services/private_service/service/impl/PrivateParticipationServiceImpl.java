@@ -49,7 +49,6 @@ public class PrivateParticipationServiceImpl implements PrivateParticipationServ
         ParticipationRequest participationRequest = participationRepository.findById(reqId).orElseThrow(() ->
                 new ParticipationNotFoundException("Заявка с id: " + reqId + " не найдена"));
         participationRequest.setStatus(Status.CONFIRMED);
-        event.setConfirmedRequests(event.getConfirmedRequests() + 1);
         return ParticipationMapper.mapParticipationRequestDtoFromParticipationRequest(participationRequest);
     }
 
@@ -87,7 +86,8 @@ public class PrivateParticipationServiceImpl implements PrivateParticipationServ
         if (participationRepository.findByEventAndRequester(eventId, userId).isPresent()) {
             throw new ParticipationAlreadyExistsException("Запрос уже был создан.");
         }
-        if (event.getParticipantLimit() == event.getConfirmedRequests()) {
+
+        if (event.getParticipantLimit() == getConfirmedRequests(List.of(eventId))) {
             throw new InvalidParticipationException("Свободных мест не осталось");
         }
         ParticipationRequest participationRequest = new ParticipationRequest();
@@ -130,5 +130,10 @@ public class PrivateParticipationServiceImpl implements PrivateParticipationServ
         Event event = eventsRepository.findById(eventId).orElseThrow(() ->
                 new EventNotFoundException("Ивент с id: " + eventId + " не найден"));
         return event;
+    }
+
+    private int getConfirmedRequests(List<Long> ids) {
+        int confirmedRequests = participationRepository.findAllByEventInAndStatus(ids, Status.CONFIRMED).size();
+        return confirmedRequests;
     }
 }

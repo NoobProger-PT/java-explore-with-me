@@ -43,8 +43,6 @@ CREATE TABLE IF NOT EXISTS events (
     initiator_id BIGINT NOT NULL,
     lat FLOAT,
     lon FLOAT,
-    views INTEGER,
-    confirmed_Requests INTEGER,
     CONSTRAINT events_table_pk primary key (id),
     CONSTRAINT initiator_id_fk foreign key (initiator_id) references users,
     CONSTRAINT category_id_fk foreign key (category_id) references categories
