@@ -27,12 +27,11 @@ public class AdminUserServiceImpl implements AdminUserService {
     @Override
     public List<UserDto> getUsers(List<Long> ids, int from, int size) {
         List<UserDto> result;
-        if (ids.size() == 1 && ids.get(0) == -1) {
+        if (ids.isEmpty()) {
             result = usersRepository.findAll(PageRequest.of(from, size, Sort.by("id").ascending())).stream()
                     .map(UserMapper::mapToUserDto).collect(Collectors.toList());
         } else {
-            result = usersRepository.findAllByIdIn(ids,
-                            PageRequest.of(from, size, Sort.by("id").ascending())).stream()
+            result = usersRepository.findAllByIdIn(ids).stream()
                     .map(UserMapper::mapToUserDto).collect(Collectors.toList());
         }
         return result;
@@ -41,12 +40,8 @@ public class AdminUserServiceImpl implements AdminUserService {
     @Override
     @Transactional
     public UserDto addUser(NewUserDto newUserDto) {
-        try {
-            User user = usersRepository.save(UserMapper.mapToUserFromNewUserDto(newUserDto));
-            return UserMapper.mapToUserDto(user);
-        } catch (EmailExistsException e) {
-            throw new EmailExistsException("Данная почта уже зарегистрирована.");
-        }
+        User user = usersRepository.save(UserMapper.mapToUserFromNewUserDto(newUserDto));
+        return UserMapper.mapToUserDto(user);
     }
 
     @Override

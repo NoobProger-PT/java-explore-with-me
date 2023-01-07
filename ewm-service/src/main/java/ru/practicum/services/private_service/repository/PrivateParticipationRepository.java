@@ -1,6 +1,7 @@
 package ru.practicum.services.private_service.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import ru.practicum.participation.Status;
 import ru.practicum.participation.model.ParticipationRequest;
 
 import java.util.List;
@@ -13,4 +14,6 @@ public interface PrivateParticipationRepository extends JpaRepository<Participat
     List<ParticipationRequest> findAllByRequester(long userId);
 
     Optional<ParticipationRequest> findByEventAndRequester(long eventId, long userId);
+
+    List<ParticipationRequest> findAllByEventInAndStatus(List<Long> events, Status status);
 }

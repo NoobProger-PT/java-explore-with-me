@@ -9,17 +9,25 @@ import ru.practicum.client.EventClient;
 import ru.practicum.event.State;
 import ru.practicum.event.dto.EndPointHitDto;
 import ru.practicum.event.dto.EventFullDto;
+import ru.practicum.event.dto.ViewStatsDto;
 import ru.practicum.event.mapper.EventMapper;
 import ru.practicum.event.model.Event;
 import ru.practicum.exception.event_exception.EventNotFoundException;
+import ru.practicum.participation.Status;
+import ru.practicum.participation.model.ParticipationRequest;
 import ru.practicum.services.admin_service.repository.AdminCategoryRepository;
 import ru.practicum.services.private_service.repository.PrivateEventsRepository;
+import ru.practicum.services.private_service.repository.PrivateParticipationRepository;
 import ru.practicum.services.public_service.service.PublicEventService;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.groupingBy;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +36,7 @@ public class PublicEventServiceImpl implements PublicEventService {
     private final EventClient eventClient;
     private final PrivateEventsRepository eventsRepository;
     private final AdminCategoryRepository categoryRepository;
+    private final PrivateParticipationRepository participationRepository;
 
     @Override
     public List<EventFullDto> getEvents(String text, List<Long> categories, boolean paid,
@@ -37,6 +46,8 @@ public class PublicEventServiceImpl implements PublicEventService {
         LocalDateTime startDate;
         LocalDateTime endDate;
         List<Event> sortedEventList;
+        List<Long> ids = new ArrayList<>();
+
         if (sort != null && sort.equals("EVENT_DATE")) {
             pageRequest = PageRequest.of(from, size, Sort.by("eventDate").ascending());
         } else if (sort != null && sort.equals("VIEWS")) {
@@ -82,31 +93,61 @@ public class PublicEventServiceImpl implements PublicEventService {
 
         List<EventFullDto> result = sortedEventList.stream()
                 .map(EventMapper::mapToEventFullDtoFromEvent)
+                .map(e -> {
+                    ids.add(e.getId());
+                    return e;
+                })
                 .collect(Collectors.toList());
 
-        EndPointHitDto endPointHitDto = new EndPointHitDto();
-        endPointHitDto.setApp("mainService");
-        endPointHitDto.setIp(request.getRemoteAddr());
-        endPointHitDto.setUri(request.getRequestURI());
+        eventClient.add(request);
 
-        for (Event event : sortedEventList) {
-            event.setViews(event.getViews() + 1);
+        if (ids.isEmpty()) {
+            return result;
         }
 
-        eventClient.add(endPointHitDto);
-
+        Map<String, List<ViewStatsDto>> mapHits = eventClient.getViews(ids).stream().collect(groupingBy(ViewStatsDto::getUri));
+        if (!mapHits.isEmpty()) {
+            for (EventFullDto event : result) {
+                event.setViews((int) mapHits.get("/events/" + event.getId()).get(0).getHits());
+            }
+        }
+        Map<Long, List<ParticipationRequest>> mapReq = participationRepository.findAllByEventInAndStatus(ids, Status.CONFIRMED).stream()
+                .collect(groupingBy(ParticipationRequest::getEvent));
+        if (!mapReq.isEmpty()) {
+            for (EventFullDto event : result) {
+                event.setConfirmedRequests(mapReq.get(event.getId()).size());
+            }
+        }
         return result;
     }
 
     @Override
     public EventFullDto getEventById(long id, HttpServletRequest request) {
         Event event = eventsRepository.findById(id).orElseThrow(() -> new EventNotFoundException("ивент не найден"));
-        EndPointHitDto endPointHitDto = new EndPointHitDto();
-        endPointHitDto.setApp("mainService");
-        endPointHitDto.setIp(request.getRemoteAddr());
-        endPointHitDto.setUri(request.getRequestURI());
-        event.setViews(event.getViews() + 1);
-        eventClient.add(endPointHitDto);
-        return EventMapper.mapToEventFullDtoFromEvent(event);
+        eventClient.add(request);
+        return setParams(event);
+    }
+
+    private int getViews(List<Long> ids) {
+        List<ViewStatsDto> list = eventClient.getViews(ids);
+        if (list.isEmpty()) {
+            return -1;
+        }
+        int views = list.size();
+        return views;
+    }
+
+    private int getConfirmedRequests(List<Long> ids) {
+        int confirmedRequests = participationRepository.findAllByEventInAndStatus(ids, Status.CONFIRMED).size();
+        return confirmedRequests;
+    }
+
+    private EventFullDto setParams(Event event) {
+        EventFullDto eventFullDto = EventMapper.mapToEventFullDtoFromEvent(event);
+        int views = getViews(List.of(eventFullDto.getId()));
+        eventFullDto.setViews(views);
+        int confirmedRequests = getConfirmedRequests(List.of(eventFullDto.getId()));
+        eventFullDto.setConfirmedRequests(confirmedRequests);
+        return eventFullDto;
     }
 }

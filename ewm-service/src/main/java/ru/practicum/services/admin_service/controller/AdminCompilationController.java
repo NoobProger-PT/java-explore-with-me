@@ -21,26 +21,26 @@ public class AdminCompilationController {
     private final AdminCompilationService service;
 
     @PostMapping("/compilations")
-    public CompilationDto addCompilation(@RequestBody @Valid NewCompilationDto newCompilationDto) {
+    public CompilationDto add(@RequestBody @Valid NewCompilationDto newCompilationDto) {
         log.info("Получен запрос на добавление новой подборки");
         return service.addCompilation(newCompilationDto);
     }
 
     @PatchMapping("/compilations/{complId}/events/{eventId}")
-    public CompilationDto addEventIntoCompilation(@PathVariable @Positive long complId,
+    public CompilationDto addEventToCompilation(@PathVariable @Positive long complId,
                                                   @PathVariable @Positive long eventId) {
         log.info("Добавление события в подборку");
         return service.addEventIntoCompilation(complId, eventId);
     }
 
     @PatchMapping("/compilations/{complId}/pin")
-    public CompilationDto addCompilationOnMainPage(@PathVariable @Positive long complId) {
+    public CompilationDto addToMainPage(@PathVariable @Positive long complId) {
         log.info("Закрепления подборки на главной странице");
         return service.addCompilationOnMainPage(complId);
     }
 
     @DeleteMapping("/compilations/{complId}")
-    public String deleteCompilation(@PathVariable @Positive long complId) {
+    public String delete(@PathVariable @Positive long complId) {
         log.info("Удаление подборки");
         return service.deleteCompilationById(complId);
     }
@@ -53,7 +53,7 @@ public class AdminCompilationController {
     }
 
     @DeleteMapping("/compilations/{complId}/pin")
-    public CompilationDto removeCompilationFromMainPage(@PathVariable @Positive long complId) {
+    public CompilationDto removeFromMainPage(@PathVariable @Positive long complId) {
         log.info("Убрать подборку из главной страницы");
         return service.removeCompilationFromMainPage(complId);
     }

@@ -10,6 +10,7 @@ import ru.practicum.services.public_service.service.PublicEventService;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.constraints.Positive;
+import javax.validation.constraints.PositiveOrZero;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -23,17 +24,17 @@ public class PublicEventController {
     private final PublicEventService service;
 
     @GetMapping
-    public List<EventFullDto> getEvents(@RequestParam(required = false) String text,
-                                        @RequestParam(defaultValue = "List.of()") List<Long> categories,
-                                        @RequestParam(required = false) boolean paid,
-                                        @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-                                            LocalDateTime rangeStart,
-                                        @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-                                            LocalDateTime rangeEnd,
-                                        @RequestParam(defaultValue = "false") boolean onlyAvailable,
-                                        @RequestParam(required = false) String sort,
-                                        @RequestParam(defaultValue = "0") int from,
-                                        @RequestParam(defaultValue = "10") int size,
+    public List<EventFullDto> get(@RequestParam(required = false) String text,
+                                  @RequestParam(required = false, defaultValue = "") List<Long> categories,
+                                  @RequestParam(required = false) boolean paid,
+                                  @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+                                      LocalDateTime rangeStart,
+                                  @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+                                      LocalDateTime rangeEnd,
+                                  @RequestParam(defaultValue = "false") boolean onlyAvailable,
+                                  @RequestParam(required = false) String sort,
+                                  @RequestParam(defaultValue = "0") @PositiveOrZero int from,
+                                  @RequestParam(defaultValue = "10") @Positive int size,
                                         HttpServletRequest request) {
         log.info("Получение событий по входным данным");
         return service.getEvents(text, categories, paid, rangeStart, rangeEnd, onlyAvailable, sort, from,
@@ -41,7 +42,7 @@ public class PublicEventController {
     }
 
     @GetMapping("/{id}")
-    public EventFullDto getEventById(@PathVariable @Positive long id, HttpServletRequest request) {
+    public EventFullDto getById(@PathVariable @Positive long id, HttpServletRequest request) {
         log.info("Получение события по ID");
         return service.getEventById(id, request);
     }

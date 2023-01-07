@@ -29,36 +29,23 @@ public class AdminCategoryServiceImpl implements AdminCategoryService {
     @Transactional
     public CategoryDto changeCategory(CategoryDto categoryDto) {
         Category category = checkCategory(categoryDto.getId());
-        try {
-            category.setName(categoryDto.getName());
-            return CategoryMapper.mapToCategoryDto(category);
-        } catch (CategoryAlreadyExistsException e) {
-            throw new CategoryAlreadyExistsException("Новая категория уже имеется в списке.");
-        }
+        category.setName(categoryDto.getName());
+        return CategoryMapper.mapToCategoryDto(category);
     }
 
     @Override
     @Transactional
     public CategoryDto addCategory(CategoryDto categoryDto) {
-        try {
-            Category category = categoryRepository.save(CategoryMapper.mapToCategory(categoryDto));
-            return CategoryMapper.mapToCategoryDto(category);
-        } catch (CategoryAlreadyExistsException e) {
-            throw new CategoryAlreadyExistsException("Новая категория уже имеется в списке.");
-        }
+        Category category = categoryRepository.save(CategoryMapper.mapToCategory(categoryDto));
+        return CategoryMapper.mapToCategoryDto(category);
     }
 
     @Override
     @Transactional
     public String deleteCategory(long catId) {
         checkCategory(catId);
-        List<Event> events = eventsRepository.findAllByCategoryId(catId);
-        if (events.size() != 0) {
-            throw new CantDeleteCategoryException("Удаляемая категория присутствует в событиях: " + events);
-        } else {
-            categoryRepository.deleteById(catId);
-            return "Категория удалена";
-        }
+        categoryRepository.deleteById(catId);
+        return "Категория удалена";
     }
 
     private Category checkCategory(long categoryId) {

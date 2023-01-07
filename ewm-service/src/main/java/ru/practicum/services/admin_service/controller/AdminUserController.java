@@ -23,7 +23,7 @@ public class AdminUserController {
     private final AdminUserService service;
 
     @GetMapping("/users")
-    public List<UserDto> getUsers(@RequestParam(defaultValue = "-1") List<Long> ids,
+    public List<UserDto> get(@RequestParam(defaultValue = "") List<Long> ids,
                                   @RequestParam(defaultValue = "0") @PositiveOrZero int from,
                                   @RequestParam(defaultValue = "10") @Positive int size) {
         log.info("Get Users with Ids: {}", ids);
@@ -31,7 +31,7 @@ public class AdminUserController {
     }
 
     @PostMapping("/users")
-    public UserDto addUser(@RequestBody @Valid NewUserDto newUserDto) {
+    public UserDto add(@RequestBody @Valid NewUserDto newUserDto) {
         log.info("Add new User with name: {} and Email: {}", newUserDto.getName(), newUserDto.getEmail());
         return service.addUser(newUserDto);
     }

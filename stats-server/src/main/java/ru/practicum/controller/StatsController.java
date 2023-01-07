@@ -29,6 +29,12 @@ public class StatsController {
         return service.getStats(start, end, uris, unique);
     }
 
+    @GetMapping("/hits")
+    public String getHits(@RequestParam List<String> uris) {
+        log.info("Запрос на получение просмотров");
+        return service.getHits(uris);
+    }
+
     @PostMapping("/hit")
     public EndPointHitDto addHit(@RequestBody EndPointHitDto endPointHitDto) {
         log.info("Запрос на добавление данных");

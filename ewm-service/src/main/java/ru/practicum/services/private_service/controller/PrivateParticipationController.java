@@ -20,27 +20,27 @@ public class PrivateParticipationController {
     private final PrivateParticipationService service;
 
     @GetMapping("/{userId}/events/{eventId}/requests")
-    public List<ParticipationRequestDto> getParticipationByEventId(@PathVariable @Positive Long eventId,
-                                                                   @PathVariable @Positive Long userId) {
+    public List<ParticipationRequestDto> getByEventId(@PathVariable @Positive Long eventId,
+                                                      @PathVariable @Positive Long userId) {
         log.info("Get participation of event id: {}", eventId);
         return service.getParticipation(userId, eventId);
     }
 
     @GetMapping("/{userId}/requests")
-    public List<ParticipationRequestDto> getParticipationByUserId(@PathVariable @Positive Long userId) {
+    public List<ParticipationRequestDto> getByUserId(@PathVariable @Positive Long userId) {
         log.info("Get all participation of user with id: {}", userId);
         return service.getParticipationByUserId(userId);
     }
 
     @PostMapping("/{userId}/requests")
-    public ParticipationRequestDto addParticipation(@PathVariable @Positive Long userId,
+    public ParticipationRequestDto add(@PathVariable @Positive Long userId,
                                                     @RequestParam @Positive Long eventId) {
         log.info("Add new participation");
         return service.addParticipation(userId, eventId);
     }
 
     @PatchMapping("/{userId}/events/{eventId}/requests/{reqId}/confirm")
-    public ParticipationRequestDto confirmReq(@PathVariable @Positive Long eventId,
+    public ParticipationRequestDto confirm(@PathVariable @Positive Long eventId,
                                               @PathVariable @Positive Long userId,
                                               @PathVariable @Positive Long reqId) {
         log.info("Confirm participation with id: {}", reqId);
@@ -48,7 +48,7 @@ public class PrivateParticipationController {
     }
 
     @PatchMapping("/{userId}/events/{eventId}/requests/{reqId}/reject")
-    public ParticipationRequestDto rejectReq(@PathVariable @Positive Long eventId,
+    public ParticipationRequestDto reject(@PathVariable @Positive Long eventId,
                                              @PathVariable @Positive Long userId,
                                              @PathVariable @Positive Long reqId) {
         log.info("Reject participation with id: {}", reqId);
@@ -56,7 +56,7 @@ public class PrivateParticipationController {
     }
 
     @PatchMapping("/{userId}/requests/{requestsId}/cancel")
-    public ParticipationRequestDto cancelRequest(@PathVariable @Positive Long userId,
+    public ParticipationRequestDto cancel(@PathVariable @Positive Long userId,
                                                  @PathVariable @Positive Long requestsId) {
         log.info("Cancel participation with id: {}", requestsId);
         return service.cancelRequest(userId, requestsId);

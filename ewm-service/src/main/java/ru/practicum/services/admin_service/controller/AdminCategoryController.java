@@ -20,19 +20,19 @@ public class AdminCategoryController {
     private final AdminCategoryService service;
 
     @PostMapping("/categories")
-    public CategoryDto addCategory(@RequestBody @Validated({Marker.Create.class}) CategoryDto categoryDto) {
+    public CategoryDto add(@RequestBody @Validated({Marker.Create.class}) CategoryDto categoryDto) {
         log.info("Add category with name: {}", categoryDto.getName());
         return service.addCategory(categoryDto);
     }
 
     @PatchMapping("/categories")
-    public CategoryDto changeCategory(@RequestBody @Validated({Marker.Update.class}) CategoryDto categoryDto) {
+    public CategoryDto change(@RequestBody @Validated({Marker.Update.class}) CategoryDto categoryDto) {
         log.info("Change category with id: {}", categoryDto.getId());
         return service.changeCategory(categoryDto);
     }
 
     @DeleteMapping("/categories/{catId}")
-    public String deleteCategory(@PathVariable @Positive long catId) {
+    public String delete(@PathVariable @Positive long catId) {
         log.info("Delete Category with Id: {}", catId);
         return service.deleteCategory(catId);
     }

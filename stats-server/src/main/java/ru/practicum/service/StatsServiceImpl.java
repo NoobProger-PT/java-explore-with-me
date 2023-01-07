@@ -1,5 +1,7 @@
 package ru.practicum.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -17,6 +19,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class StatsServiceImpl implements StatsService {
+
+    private final ObjectMapper mapper = new ObjectMapper();
 
     private final StatsRepository repository;
 
@@ -43,7 +47,7 @@ public class StatsServiceImpl implements StatsService {
 
         if (endPointHits.size() == 0) {
             List<ViewStatsDto> emptyList = new ArrayList<>();
-            emptyList.add(new ViewStatsDto());
+            emptyList.add(new ViewStatsDto("none", "none", 0));
             return emptyList;
         }
 
@@ -86,5 +90,22 @@ public class StatsServiceImpl implements StatsService {
     public EndPointHitDto addHit(EndPointHitDto endPointHitDto) {
         EndPointHit endPointHit = repository.save(EndPointHitMapper.mapToEndPointHitFromEndPointHitDto(endPointHitDto));
         return EndPointHitMapper.mapToEndPointHitDtoFromEndPointHit(endPointHit);
+    }
+
+    @Override
+    public String getHits(List<String> uris) {
+        List<ViewStatsDto> hits = repository.findAllByUriIn(uris).stream()
+                .map(EndPointHitMapper::mapToViewDtoFromHit)
+                .collect(Collectors.toList());
+        if (hits.isEmpty()) {
+            hits = List.of();
+        }
+        try {
+            String json = mapper.writeValueAsString(hits);
+            return json;
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+
     }
 }

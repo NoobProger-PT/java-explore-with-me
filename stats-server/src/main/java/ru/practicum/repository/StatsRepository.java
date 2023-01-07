@@ -9,4 +9,6 @@ import java.util.List;
 public interface StatsRepository extends JpaRepository<EndPointHit, Long> {
 
     List<EndPointHit> findAllByTimeStampBetween(LocalDateTime start, LocalDateTime end);
+
+    List<EndPointHit> findAllByUriIn(List<String> uris);
 }

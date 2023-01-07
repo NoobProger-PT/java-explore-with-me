@@ -6,36 +6,47 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.category.model.Category;
+import ru.practicum.client.EventClient;
 import ru.practicum.event.State;
 import ru.practicum.event.dto.AdminUpdateEventRequest;
 import ru.practicum.event.dto.EventFullDto;
+import ru.practicum.event.dto.ViewStatsDto;
 import ru.practicum.event.location.mapper.LocationMapper;
 import ru.practicum.event.mapper.EventMapper;
 import ru.practicum.event.model.Event;
 import ru.practicum.exception.category_exception.CategoryNotFoundException;
 import ru.practicum.exception.event_exception.EventNotFoundException;
+import ru.practicum.participation.Status;
+import ru.practicum.participation.model.ParticipationRequest;
 import ru.practicum.services.admin_service.repository.AdminCategoryRepository;
 import ru.practicum.services.admin_service.service.AdminEventService;
 import ru.practicum.services.private_service.repository.PrivateEventsRepository;
+import ru.practicum.services.private_service.repository.PrivateParticipationRepository;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.groupingBy;
 
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class AdminEventServiceImpl implements AdminEventService {
 
+    private final EventClient eventClient;
     private final PrivateEventsRepository eventsRepository;
-
     private final AdminCategoryRepository categoryRepository;
+    private final PrivateParticipationRepository participationRepository;
 
     @Override
     public List<EventFullDto> getEvents(List<Long> users, List<String> states, List<Long> categories, LocalDateTime rangeStart,
                                         LocalDateTime rangeEnd, int from, int size) {
         LocalDateTime startDate;
         LocalDateTime endDate;
+        List<Long> ids = new ArrayList<>();
 
         List<Event> events = eventsRepository.findAllByInitiatorIdIn(users, PageRequest.of(from, size, Sort.by("id")
                 .ascending())).stream().collect(Collectors.toList());
@@ -62,8 +73,29 @@ public class AdminEventServiceImpl implements AdminEventService {
                         && e.getEventDate().isAfter(startDate)
                         && e.getEventDate().isBefore(endDate))
                 .map(EventMapper::mapToEventFullDtoFromEvent)
+                .map(e -> {
+                    ids.add(e.getId());
+                    return e;
+                })
                 .collect(Collectors.toList());
 
+        if (ids.isEmpty()) {
+            return result;
+        }
+
+        Map<String, List<ViewStatsDto>> mapHits = eventClient.getViews(ids).stream().collect(groupingBy(ViewStatsDto::getUri));
+        if (!mapHits.isEmpty()) {
+            for (EventFullDto event : result) {
+                event.setViews((int) mapHits.get("/events/" + event.getId()).get(0).getHits());
+            }
+        }
+        Map<Long, List<ParticipationRequest>> mapReq = participationRepository.findAllByEventInAndStatus(ids, Status.CONFIRMED).stream()
+                .collect(groupingBy(ParticipationRequest::getEvent));
+        if (!mapReq.isEmpty()) {
+            for (EventFullDto event : result) {
+                event.setConfirmedRequests(mapReq.get(event.getId()).size());
+            }
+        }
         return result;
     }
 
@@ -84,7 +116,7 @@ public class AdminEventServiceImpl implements AdminEventService {
         event.setParticipantLimit(adminUpdateEventRequest.getParticipantLimit());
         event.setRequestModeration(adminUpdateEventRequest.isRequestModeration());
         event.setTitle(adminUpdateEventRequest.getTitle());
-        return EventMapper.mapToEventFullDtoFromEvent(event);
+        return setParams(event);
     }
 
     @Override
@@ -93,7 +125,7 @@ public class AdminEventServiceImpl implements AdminEventService {
         Event event = eventsRepository.findById(eventId)
                 .orElseThrow(() -> new EventNotFoundException("ивент не найден"));
         event.setState(State.PUBLISHED);
-        return EventMapper.mapToEventFullDtoFromEvent(event);
+        return setParams(event);
     }
 
     @Override
@@ -102,12 +134,35 @@ public class AdminEventServiceImpl implements AdminEventService {
         Event event = eventsRepository.findById(eventId)
                 .orElseThrow(() -> new EventNotFoundException("ивент не найден"));
         event.setState(State.CANCELED);
-        return EventMapper.mapToEventFullDtoFromEvent(event);
+        return setParams(event);
     }
 
     private Category checkCategory(long categoryId) {
         Category category = categoryRepository.findById(categoryId).orElseThrow(() ->
                 new CategoryNotFoundException("Категория с id: " + categoryId + " не найдена"));
         return category;
+    }
+
+    private int getViews(List<Long> ids) {
+        List<ViewStatsDto> list = eventClient.getViews(ids);
+        if (list.isEmpty()) {
+            return 0;
+        }
+        int views = (int) list.get(0).getHits();
+        return views;
+    }
+
+    private int getConfirmedRequests(List<Long> ids) {
+        int confirmedRequests = participationRepository.findAllByEventInAndStatus(ids, Status.CONFIRMED).size();
+        return confirmedRequests;
+    }
+
+    private EventFullDto setParams(Event event) {
+        EventFullDto eventFullDto = EventMapper.mapToEventFullDtoFromEvent(event);
+        int views = getViews(List.of(eventFullDto.getId()));
+        eventFullDto.setViews(views);
+        int confirmedRequests = getConfirmedRequests(List.of(eventFullDto.getId()));
+        eventFullDto.setConfirmedRequests(confirmedRequests);
+        return eventFullDto;
     }
 }

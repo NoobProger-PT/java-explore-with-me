@@ -1,9 +1,11 @@
 package ru.practicum.client;
 
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.lang.Nullable;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
+import ru.practicum.event.dto.ViewStatsDto;
 
 import java.util.List;
 import java.util.Map;
@@ -20,19 +22,24 @@ public class BaseClient {
     }
 
     protected <T> ResponseEntity<Object> post(String path, T body) {
-        return makeAndSendRequest(POST, path, null, body);
+        return makeAndSendRequest(false, POST, path, null, body);
     }
 
-    protected ResponseEntity<Object> get(String path, @Nullable Map<String, Object> parameters) {
-        return makeAndSendRequest(GET, path, null, parameters);
+    protected ResponseEntity<List<ViewStatsDto>> get(String path, @Nullable Map<String, Object> parameters) {
+        return makeAndSendRequest(true, GET, path, null, parameters);
     }
 
-    private <T> ResponseEntity makeAndSendRequest(HttpMethod method, String path, @Nullable Map<String,
+    private <T> ResponseEntity makeAndSendRequest(boolean hits, HttpMethod method, String path, @Nullable Map<String,
             Object> parameters, @Nullable T body) {
         HttpEntity<Object> requestEntity = new HttpEntity<>(body, defaultHeaders());
 
         ResponseEntity<Object> mainServerResponse;
+        ResponseEntity<List<ViewStatsDto>> views;
         try {
+            if (hits) {
+                views = rest.exchange(path, method, requestEntity, new ParameterizedTypeReference<>() {});
+                return views;
+            }
             if (parameters != null) {
                 mainServerResponse = rest.exchange(path, method, requestEntity, Object.class, parameters);
             } else {
@@ -51,7 +58,7 @@ public class BaseClient {
         return headers;
     }
 
-    private static ResponseEntity<Object> prepareGatewayResponse(ResponseEntity<Object> response) {
+    private static <T> ResponseEntity prepareGatewayResponse(ResponseEntity<T> response) {
         if (response.getStatusCode().is2xxSuccessful()) {
             return response;
         }
