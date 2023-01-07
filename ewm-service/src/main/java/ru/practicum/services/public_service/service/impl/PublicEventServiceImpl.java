@@ -47,6 +47,10 @@ public class PublicEventServiceImpl implements PublicEventService {
         List<Event> sortedEventList;
         List<Long> ids = new ArrayList<>();
 
+        if (text == null) {
+            text = "";
+        }
+
         if (sort != null && sort.equals("EVENT_DATE")) {
             pageRequest = PageRequest.of(from, size, Sort.by("eventDate").ascending());
         } else if (sort != null && sort.equals("VIEWS")) {
@@ -66,7 +70,13 @@ public class PublicEventServiceImpl implements PublicEventService {
             endDate = rangeEnd;
         }
 
-        List<Category> categoryList = categoryRepository.findAllById(categories);
+        List<Category> categoryList;
+
+        if (categories.size() != 0) {
+            categoryList = categoryRepository.findAllById(categories);
+        } else {
+            categoryList = categoryRepository.findAll();
+        }
 
         List<Event> events = eventsRepository.findAllByAnnotationOrDescriptionContainingIgnoreCaseAndCategoryInAndState(
                 text, text, categoryList, State.PUBLISHED, pageRequest);
