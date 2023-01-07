@@ -16,7 +16,7 @@ import java.util.List;
 @Service
 public class EventClient extends BaseClient {
 
-    private final String APP_NAME = "main-Service";
+    private final String APPNAME = "main-Service";
 
     @Autowired
     public EventClient(@Value("${stats-server.url}") String serverUrl, RestTemplateBuilder builder) {
@@ -53,7 +53,7 @@ public class EventClient extends BaseClient {
         EndPointHitDto endPointHitDto = new EndPointHitDto();
         endPointHitDto.setIp(request.getRemoteAddr());
         endPointHitDto.setUri(request.getRequestURI());
-        endPointHitDto.setApp(APP_NAME);
+        endPointHitDto.setApp(APPNAME);
         return endPointHitDto;
     }
 }
