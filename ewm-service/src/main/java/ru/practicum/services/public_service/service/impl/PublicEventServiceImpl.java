@@ -7,7 +7,6 @@ import org.springframework.stereotype.Service;
 import ru.practicum.category.model.Category;
 import ru.practicum.client.EventClient;
 import ru.practicum.event.State;
-import ru.practicum.event.dto.EndPointHitDto;
 import ru.practicum.event.dto.EventFullDto;
 import ru.practicum.event.dto.ViewStatsDto;
 import ru.practicum.event.mapper.EventMapper;

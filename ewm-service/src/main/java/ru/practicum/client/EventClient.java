@@ -1,8 +1,5 @@
 package ru.practicum.client;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -18,8 +15,6 @@ import java.util.List;
 
 @Service
 public class EventClient extends BaseClient {
-
-    ObjectMapper om = new ObjectMapper();
 
     private final String APP_NAME = "main-Service";
 

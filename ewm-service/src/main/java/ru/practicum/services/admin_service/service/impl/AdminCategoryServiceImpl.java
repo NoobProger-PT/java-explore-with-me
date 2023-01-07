@@ -6,15 +6,10 @@ import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.category.dto.CategoryDto;
 import ru.practicum.category.mapper.CategoryMapper;
 import ru.practicum.category.model.Category;
-import ru.practicum.event.model.Event;
-import ru.practicum.exception.category_exception.CantDeleteCategoryException;
-import ru.practicum.exception.category_exception.CategoryAlreadyExistsException;
 import ru.practicum.exception.category_exception.CategoryNotFoundException;
 import ru.practicum.services.admin_service.repository.AdminCategoryRepository;
 import ru.practicum.services.admin_service.service.AdminCategoryService;
 import ru.practicum.services.private_service.repository.PrivateEventsRepository;
-
-import java.util.List;
 
 @Service
 @Transactional(readOnly = true)

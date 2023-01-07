@@ -9,7 +9,6 @@ import ru.practicum.event.dto.AdminUpdateEventRequest;
 import ru.practicum.event.dto.EventFullDto;
 import ru.practicum.services.admin_service.service.AdminEventService;
 
-import javax.validation.Valid;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
 import java.time.LocalDateTime;

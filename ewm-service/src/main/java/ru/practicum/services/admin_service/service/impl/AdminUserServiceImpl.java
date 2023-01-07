@@ -5,7 +5,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.exception.user_exception.EmailExistsException;
 import ru.practicum.exception.user_exception.UserNotFound;
 import ru.practicum.services.admin_service.repository.AdminUsersRepository;
 import ru.practicum.services.admin_service.service.AdminUserService;
