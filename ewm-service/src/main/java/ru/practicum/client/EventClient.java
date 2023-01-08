@@ -16,7 +16,8 @@ import java.util.List;
 @Service
 public class EventClient extends BaseClient {
 
-    private final String appName = "main-Service";
+    @Value("${main.service.name}")
+    private String appName;
 
     @Autowired
     public EventClient(@Value("${stats-server.url}") String serverUrl, RestTemplateBuilder builder) {

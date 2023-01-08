@@ -15,7 +15,8 @@ import ru.practicum.services.admin_service.service.AdminCompilationService;
 import ru.practicum.services.private_service.repository.PrivateEventsRepository;
 
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Objects;
+import java.util.Set;
 
 @Service
 @Transactional(readOnly = true)
@@ -29,6 +30,9 @@ public class AdminCompilationServiceImpl implements AdminCompilationService {
     @Override
     @Transactional
     public CompilationDto addCompilation(NewCompilationDto newCompilationDto) {
+        if (newCompilationDto.getEvents() == null || newCompilationDto.getEvents().isEmpty()) {
+            newCompilationDto.setEvents(Set.of());
+        }
         List<Event> eventList = eventsRepository.findAllById(newCompilationDto.getEvents());
         Compilation compilation = CompilationMapper.mapToCompilationFromNewCompilationDto(newCompilationDto);
         compilation.setEvents(eventList);
@@ -47,11 +51,7 @@ public class AdminCompilationServiceImpl implements AdminCompilationService {
     @Transactional
     public String deleteEventFromCompilation(long complId, long eventId) {
         Compilation compilation = checkCompilation(complId);
-        List<Event> eventList = compilation.getEvents().stream()
-                .filter(event -> event.getId() != eventId)
-                .collect(Collectors.toList());
-        compilation.setEvents(eventList);
-        compilationRepository.save(compilation);
+        compilation.getEvents().removeIf(c -> Objects.equals(c.getId(), eventId));
         return "ивент удален из подборки";
     }
 
@@ -62,7 +62,7 @@ public class AdminCompilationServiceImpl implements AdminCompilationService {
         Event event = eventsRepository.findById(eventId)
                 .orElseThrow(() -> new EventNotFoundException("ивент не найден"));
         compilation.getEvents().add(event);
-        return CompilationMapper.mapToCompilationDtoFromCompilation(compilationRepository.save(compilation));
+        return CompilationMapper.mapToCompilationDtoFromCompilation(compilation);
     }
 
     @Override
@@ -70,7 +70,7 @@ public class AdminCompilationServiceImpl implements AdminCompilationService {
     public CompilationDto removeCompilationFromMainPage(long complId) {
         Compilation compilation = checkCompilation(complId);
         compilation.setPinned(false);
-        return CompilationMapper.mapToCompilationDtoFromCompilation(compilationRepository.save(compilation));
+        return CompilationMapper.mapToCompilationDtoFromCompilation(compilation);
     }
 
     @Override
@@ -78,7 +78,7 @@ public class AdminCompilationServiceImpl implements AdminCompilationService {
     public CompilationDto addCompilationOnMainPage(long complId) {
         Compilation compilation = checkCompilation(complId);
         compilation.setPinned(true);
-        return CompilationMapper.mapToCompilationDtoFromCompilation(compilationRepository.save(compilation));
+        return CompilationMapper.mapToCompilationDtoFromCompilation(compilation);
     }
 
     private Compilation checkCompilation(long complId) {

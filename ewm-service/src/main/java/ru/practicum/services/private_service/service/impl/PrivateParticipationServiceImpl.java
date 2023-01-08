@@ -46,18 +46,22 @@ public class PrivateParticipationServiceImpl implements PrivateParticipationServ
     @Transactional
     public ParticipationRequestDto confirmParticipation(long userId, long eventId, long reqId) {
         Event event = checkEventByHost(eventId, userId);
-        ParticipationRequest participationRequest = participationRepository.findById(reqId).orElseThrow(() ->
-                new ParticipationNotFoundException("Заявка с id: " + reqId + " не найдена"));
-        participationRequest.setStatus(Status.CONFIRMED);
-        return ParticipationMapper.mapParticipationRequestDtoFromParticipationRequest(participationRequest);
+        ParticipationRequest participationRequest = checkEventAndParticipationEquals(userId, eventId, reqId, event);
+
+        if (event.getParticipantLimit() > 0 && event.getParticipantLimit() == getConfirmedRequests(List.of(eventId))) {
+            participationRequest.setStatus(Status.REJECTED);
+            throw new InvalidParticipationException("Свободных мест не осталось. Заявка автоматически отклонена.");
+        } else {
+            participationRequest.setStatus(Status.CONFIRMED);
+            return ParticipationMapper.mapParticipationRequestDtoFromParticipationRequest(participationRequest);
+        }
     }
 
     @Override
     @Transactional
     public ParticipationRequestDto rejectParticipation(long userId, long eventId, long reqId) {
-        checkEventByHost(eventId, userId);
-        ParticipationRequest participationRequest = participationRepository.findById(reqId).orElseThrow(() ->
-                new ParticipationNotFoundException("Заявка с id: " + reqId + " не найдена"));
+        Event event = checkEventByHost(eventId, userId);
+        ParticipationRequest participationRequest = checkEventAndParticipationEquals(userId, eventId, reqId, event);
         participationRequest.setStatus(Status.REJECTED);
         return ParticipationMapper.mapParticipationRequestDtoFromParticipationRequest(participationRequest);
     }
@@ -87,17 +91,22 @@ public class PrivateParticipationServiceImpl implements PrivateParticipationServ
             throw new ParticipationAlreadyExistsException("Запрос уже был создан.");
         }
 
-        if (event.getParticipantLimit() == getConfirmedRequests(List.of(eventId))) {
-            throw new InvalidParticipationException("Свободных мест не осталось");
-        }
         ParticipationRequest participationRequest = new ParticipationRequest();
         participationRequest.setRequester(userId);
         participationRequest.setEvent(eventId);
         participationRequest.setCreated(LocalDateTime.now());
-        if (!event.isRequestModeration()) {
+
+        int confirmedRequests = getConfirmedRequests(List.of(eventId));
+
+        if (event.getParticipantLimit() > 0 && event.getParticipantLimit() == confirmedRequests) {
+            participationRequest.setStatus(Status.REJECTED);
+            throw new InvalidParticipationException("Свободных мест не осталось. Заявка автоматически отклонена.");
+        }
+        if (!event.isRequestModeration() && (event.getParticipantLimit() == 0 ||
+                event.getParticipantLimit() > confirmedRequests)) {
             participationRequest.setStatus(Status.CONFIRMED);
         } else {
-        participationRequest.setStatus(Status.PENDING);
+            participationRequest.setStatus(Status.PENDING);
         }
 
         ParticipationRequest savedParticipation = participationRepository.save(participationRequest);
@@ -107,8 +116,7 @@ public class PrivateParticipationServiceImpl implements PrivateParticipationServ
     @Override
     @Transactional
     public ParticipationRequestDto cancelRequest(long userId, long requestId) {
-        checkUserExists(userId);
-        ParticipationRequest participationRequest = participationRepository.findById(requestId).orElseThrow(() ->
+        ParticipationRequest participationRequest = participationRepository.findByRequesterAndId(userId, requestId).orElseThrow(() ->
                 new ParticipationNotFoundException("Запрос с id: " + requestId + " не найден"));
         participationRequest.setStatus(Status.CANCELED);
         return ParticipationMapper.mapParticipationRequestDtoFromParticipationRequest(participationRequest);
@@ -135,5 +143,16 @@ public class PrivateParticipationServiceImpl implements PrivateParticipationServ
     private int getConfirmedRequests(List<Long> ids) {
         int confirmedRequests = participationRepository.findAllByEventInAndStatus(ids, Status.CONFIRMED).size();
         return confirmedRequests;
+    }
+
+    private ParticipationRequest checkEventAndParticipationEquals(long userId, long eventId, long reqId, Event event) {
+        ParticipationRequest participationRequest = participationRepository.findById(reqId).orElseThrow(() ->
+                new ParticipationNotFoundException("Заявка с id: " + reqId + " не найдена"));
+
+        if (participationRequest.getEvent() != event.getId()) {
+            throw new InvalidParticipationException("Данная заявка не относится к этому ивенту.");
+        }
+
+        return participationRequest;
     }
 }

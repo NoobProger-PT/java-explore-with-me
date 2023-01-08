@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.groupingBy;
 
 @Service
@@ -44,8 +45,9 @@ public class PublicEventServiceImpl implements PublicEventService {
         PageRequest pageRequest;
         LocalDateTime startDate;
         LocalDateTime endDate;
-        List<Event> sortedEventList;
         List<Long> ids = new ArrayList<>();
+        List<Category> categoryList;
+        List<Event> events;
 
         if (text == null) {
             text = "";
@@ -59,47 +61,31 @@ public class PublicEventServiceImpl implements PublicEventService {
             pageRequest = PageRequest.of(from, size, Sort.by("Id").ascending());
         }
 
-        if (rangeStart == null) {
-            startDate = LocalDateTime.now();
-        } else {
-            startDate = rangeStart;
-        }
-        if (rangeEnd == null) {
-            endDate = LocalDateTime.MAX;
-        } else {
-            endDate = rangeEnd;
-        }
-
-        List<Category> categoryList;
-
         if (categories.size() != 0) {
             categoryList = categoryRepository.findAllById(categories);
         } else {
             categoryList = categoryRepository.findAll();
         }
 
-        List<Event> events = eventsRepository.findAllByAnnotationOrDescriptionContainingIgnoreCaseAndCategoryInAndState(
-                text, text, categoryList, State.PUBLISHED, pageRequest);
+        if (rangeStart == null) {
+            startDate = LocalDateTime.of(1000,10, 10, 10, 10);
+        } else {
+            startDate = rangeStart;
+        }
+        if (rangeEnd == null) {
+            endDate = LocalDateTime.of(5000, 10, 10, 10, 10);;
+        } else {
+            endDate = rangeEnd;
+        }
+
+         events = eventsRepository.findAllByAnnotationOrDescriptionContainingIgnoreCaseAndCategoryInAndStateAndPaidAndEventDateBetween(
+                text, text, categoryList, State.PUBLISHED, paid, startDate, endDate, pageRequest);
 
         if (events.size() == 0) {
             return List.of();
         }
 
-        if (onlyAvailable) {
-            sortedEventList = events.stream()
-                    .filter(e -> e.isPaid() == paid
-                            && e.getEventDate().isAfter(startDate)
-                            && e.getEventDate().isBefore(endDate))
-                    .collect(Collectors.toList());
-        } else {
-            sortedEventList = events.stream()
-                    .filter(e -> e.isPaid() == paid
-                            && e.getEventDate().isAfter(startDate)
-                            && e.getEventDate().isBefore(endDate))
-                    .collect(Collectors.toList());
-        }
-
-        List<EventFullDto> result = sortedEventList.stream()
+        List<EventFullDto> result = events.stream()
                 .map(EventMapper::mapToEventFullDtoFromEvent)
                 .map(e -> {
                     ids.add(e.getId());
@@ -107,23 +93,29 @@ public class PublicEventServiceImpl implements PublicEventService {
                 })
                 .collect(Collectors.toList());
 
+        Map<Long, Long> requires = participationRepository.findAllByEventInAndStatus(ids, Status.CONFIRMED).stream()
+                .collect(groupingBy(ParticipationRequest::getEvent, counting()));
+
+        if (onlyAvailable) {
+            result.removeIf(e -> e.getParticipantLimit() < requires.get(e.getId()));
+        }
+
         eventClient.add(request);
 
         if (ids.isEmpty()) {
             return result;
         }
 
-        Map<String, List<ViewStatsDto>> mapHits = eventClient.getViews(ids).stream().collect(groupingBy(ViewStatsDto::getUri));
+        Map<String, Long> mapHits = eventClient.getViews(ids).stream().collect(groupingBy(ViewStatsDto::getUri, counting()));
         if (!mapHits.isEmpty()) {
             for (EventFullDto event : result) {
-                event.setViews((int) mapHits.get("/events/" + event.getId()).get(0).getHits());
+                event.setViews(Math.toIntExact(mapHits.get("/events/" + event.getId())));
             }
         }
-        Map<Long, List<ParticipationRequest>> mapReq = participationRepository.findAllByEventInAndStatus(ids, Status.CONFIRMED).stream()
-                .collect(groupingBy(ParticipationRequest::getEvent));
-        if (!mapReq.isEmpty()) {
+
+        if (!requires.isEmpty()) {
             for (EventFullDto event : result) {
-                event.setConfirmedRequests(mapReq.get(event.getId()).size());
+                event.setConfirmedRequests(requires.get(event.getId()).intValue());
             }
         }
         return result;

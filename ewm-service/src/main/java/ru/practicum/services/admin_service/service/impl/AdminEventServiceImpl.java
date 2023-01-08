@@ -5,6 +5,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.w3c.dom.events.EventException;
 import ru.practicum.category.model.Category;
 import ru.practicum.client.EventClient;
 import ru.practicum.event.State;
@@ -16,6 +17,8 @@ import ru.practicum.event.mapper.EventMapper;
 import ru.practicum.event.model.Event;
 import ru.practicum.exception.category_exception.CategoryNotFoundException;
 import ru.practicum.exception.event_exception.EventNotFoundException;
+import ru.practicum.exception.event_exception.PublishedEventException;
+import ru.practicum.exception.event_exception.WrongEventDateException;
 import ru.practicum.participation.Status;
 import ru.practicum.participation.model.ParticipationRequest;
 import ru.practicum.services.admin_service.repository.AdminCategoryRepository;
@@ -48,30 +51,29 @@ public class AdminEventServiceImpl implements AdminEventService {
         LocalDateTime endDate;
         List<Long> ids = new ArrayList<>();
 
-        List<Event> events = eventsRepository.findAllByInitiatorIdIn(users, PageRequest.of(from, size, Sort.by("id")
-                .ascending())).stream().collect(Collectors.toList());
-
-        if (events.size() == 0) {
-            return List.of();
-        }
+        List<State> stateList = states.stream().map(State::valueOf).collect(Collectors.toList());
 
         if (rangeStart != null) {
             startDate = rangeStart;
         } else {
-            startDate = LocalDateTime.now();
+            startDate = LocalDateTime.of(1000,10, 10, 10, 10);
         }
 
         if (rangeEnd != null) {
             endDate = rangeEnd;
         } else {
-            endDate = LocalDateTime.MAX;
+            endDate = LocalDateTime.of(5000, 10, 10, 10, 10);
+        }
+
+        List<Event> events = eventsRepository.findAllByInitiatorIdInAndStateInAndCategoryIdInAndEventDateBetween(users,
+                stateList, categories, startDate, endDate, PageRequest.of(from, size, Sort.by("id")
+                .ascending()));
+
+        if (events.size() == 0) {
+            return List.of();
         }
 
         List<EventFullDto> result = events.stream()
-                .filter(e -> states.contains(e.getState().name())
-                        && categories.contains(e.getCategory().getId())
-                        && e.getEventDate().isAfter(startDate)
-                        && e.getEventDate().isBefore(endDate))
                 .map(EventMapper::mapToEventFullDtoFromEvent)
                 .map(e -> {
                     ids.add(e.getId());
@@ -124,6 +126,12 @@ public class AdminEventServiceImpl implements AdminEventService {
     public EventFullDto publishEvent(long eventId) {
         Event event = eventsRepository.findById(eventId)
                 .orElseThrow(() -> new EventNotFoundException("ивент не найден"));
+        if (event.getState() != State.PENDING) {
+            throw new PublishedEventException("Можно опубликовывать только события со статусом ожидания.");
+        }
+        if (event.getEventDate().isBefore(LocalDateTime.now().plusHours(2))) {
+            throw new WrongEventDateException("Дата начала ивента должна быть не раньше чем через час от текущего момента.");
+        }
         event.setState(State.PUBLISHED);
         return setParams(event);
     }
@@ -133,6 +141,9 @@ public class AdminEventServiceImpl implements AdminEventService {
     public EventFullDto rejectEvent(long eventId) {
         Event event = eventsRepository.findById(eventId)
                 .orElseThrow(() -> new EventNotFoundException("ивент не найден"));
+        if (event.getState() == State.PUBLISHED) {
+            throw new PublishedEventException("Ивент уже опубликован. Отклонить невозможно.");
+        }
         event.setState(State.CANCELED);
         return setParams(event);
     }

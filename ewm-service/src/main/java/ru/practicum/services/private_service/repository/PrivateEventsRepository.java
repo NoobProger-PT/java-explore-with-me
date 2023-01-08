@@ -7,6 +7,7 @@ import ru.practicum.category.model.Category;
 import ru.practicum.event.State;
 import ru.practicum.event.model.Event;
 
+import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -19,11 +20,19 @@ public interface PrivateEventsRepository extends JpaRepository<Event, Long> {
 
     List<Event> findAllByCategoryId(long catId);
 
-    List<Event> findAllByAnnotationOrDescriptionContainingIgnoreCaseAndCategoryInAndState(String annotation,
-                                                                                          String description,
-                                                                                          Collection<Category> category,
-                                                                                          State state,
-                                                                                          Pageable pageable);
+    List<Event> findAllByAnnotationOrDescriptionContainingIgnoreCaseAndCategoryInAndStateAndPaidAndEventDateBetween(String annotation,
+                                                                                                                    String description,
+                                                                                                                    Collection<Category> category,
+                                                                                                                    State state,
+                                                                                                                    boolean paid,
+                                                                                                                    LocalDateTime start,
+                                                                                                                    LocalDateTime end,
+                                                                                                                    Pageable pageable);
 
-    List<Event> findAllByInitiatorIdIn(List<Long> users, Pageable pageable);
+    List<Event> findAllByInitiatorIdInAndStateInAndCategoryIdInAndEventDateBetween(Collection<Long> initiator_id,
+                                                                                 Collection<State> state,
+                                                                                 Collection<Long> category,
+                                                                                 LocalDateTime eventDate,
+                                                                                 LocalDateTime eventDate2,
+                                                                                 Pageable pageable);
 }

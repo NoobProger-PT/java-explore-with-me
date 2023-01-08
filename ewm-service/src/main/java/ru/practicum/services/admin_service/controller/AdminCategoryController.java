@@ -14,7 +14,6 @@ import javax.validation.constraints.Positive;
 @RequiredArgsConstructor
 @RequestMapping(path = "/admin")
 @Slf4j
-@Validated
 public class AdminCategoryController {
 
     private final AdminCategoryService service;

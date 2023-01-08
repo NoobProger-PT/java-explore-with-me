@@ -1,6 +1,7 @@
 package ru.practicum.services.public_service.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -24,15 +25,11 @@ public class PublicCompilationServiceImpl implements PublicCompilationService {
     public List<CompilationDto> getCompilations(boolean pinned, int from, int size) {
         List<CompilationDto> result;
         if (pinned) {
-            result = compilationRepository.findAllByPinned(true,
-                            PageRequest.of(from, size, Sort.by("id").ascending())).stream()
-                    .map(CompilationMapper::mapToCompilationDtoFromCompilation)
-                    .collect(Collectors.toList());
+            result = mapToListCompilationDto(compilationRepository.findAllByPinned(true,
+                            PageRequest.of(from, size, Sort.by("id").ascending())));
         } else {
-            result = compilationRepository.findAll(
-                            PageRequest.of(from, size, Sort.by("id").ascending())).stream()
-                    .map(CompilationMapper::mapToCompilationDtoFromCompilation)
-                    .collect(Collectors.toList());
+            result = mapToListCompilationDto(compilationRepository.findAll(
+                            PageRequest.of(from, size, Sort.by("id").ascending())));
         }
         return result;
     }
@@ -42,5 +39,11 @@ public class PublicCompilationServiceImpl implements PublicCompilationService {
         Compilation compilation = compilationRepository.findById(complId).orElseThrow(
                 () -> new CompilationNutFoundException("Такой подборки не существует"));
         return CompilationMapper.mapToCompilationDtoFromCompilation(compilation);
+    }
+
+    private List<CompilationDto> mapToListCompilationDto(Page<Compilation> page) {
+        return page.stream()
+                .map(CompilationMapper::mapToCompilationDtoFromCompilation)
+                .collect(Collectors.toList());
     }
 }

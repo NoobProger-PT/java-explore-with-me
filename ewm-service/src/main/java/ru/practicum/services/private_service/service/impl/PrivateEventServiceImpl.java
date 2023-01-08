@@ -112,10 +112,10 @@ public class PrivateEventServiceImpl implements PrivateEventService {
         if (updateEventDto.getEventDate() != null) {
             event.setEventDate(updateEventDto.getEventDate());
         }
-        if (updateEventDto.getPaid() != event.isPaid()) {
+        if (updateEventDto.getPaid() != null) {
             event.setPaid(updateEventDto.getPaid());
         }
-        if (updateEventDto.getParticipantLimit() != event.getParticipantLimit()) {
+        if (updateEventDto.getParticipantLimit() != null) {
             event.setParticipantLimit(updateEventDto.getParticipantLimit());
         }
         if (updateEventDto.getTitle() != null && !updateEventDto.getTitle().isBlank()) {
