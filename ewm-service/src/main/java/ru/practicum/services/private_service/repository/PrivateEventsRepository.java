@@ -18,8 +18,6 @@ public interface PrivateEventsRepository extends JpaRepository<Event, Long> {
 
     Optional<Event> findByIdAndInitiatorId(long eventId, long userId);
 
-    List<Event> findAllByCategoryId(long catId);
-
     List<Event> findAllByAnnotationOrDescriptionContainingIgnoreCaseAndCategoryInAndStateAndPaidAndEventDateBetween(String annotation,
                                                                                                                     String description,
                                                                                                                     Collection<Category> category,
@@ -29,7 +27,7 @@ public interface PrivateEventsRepository extends JpaRepository<Event, Long> {
                                                                                                                     LocalDateTime end,
                                                                                                                     Pageable pageable);
 
-    List<Event> findAllByInitiatorIdInAndStateInAndCategoryIdInAndEventDateBetween(Collection<Long> initiator_id,
+    List<Event> findAllByInitiatorIdInAndStateInAndCategoryIdInAndEventDateBetween(Collection<Long> initiatorId,
                                                                                  Collection<State> state,
                                                                                  Collection<Long> category,
                                                                                  LocalDateTime eventDate,

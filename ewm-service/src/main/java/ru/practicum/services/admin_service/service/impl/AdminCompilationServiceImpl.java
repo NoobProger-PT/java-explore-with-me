@@ -16,7 +16,6 @@ import ru.practicum.services.private_service.repository.PrivateEventsRepository;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 
 @Service
 @Transactional(readOnly = true)
@@ -30,12 +29,13 @@ public class AdminCompilationServiceImpl implements AdminCompilationService {
     @Override
     @Transactional
     public CompilationDto addCompilation(NewCompilationDto newCompilationDto) {
-        if (newCompilationDto.getEvents() == null || newCompilationDto.getEvents().isEmpty()) {
-            newCompilationDto.setEvents(Set.of());
-        }
-        List<Event> eventList = eventsRepository.findAllById(newCompilationDto.getEvents());
         Compilation compilation = CompilationMapper.mapToCompilationFromNewCompilationDto(newCompilationDto);
-        compilation.setEvents(eventList);
+        if (newCompilationDto.getEvents() == null || newCompilationDto.getEvents().isEmpty()) {
+            compilation.setEvents(List.of());
+        } else {
+            List<Event> eventList = eventsRepository.findAllById(newCompilationDto.getEvents());
+            compilation.setEvents(eventList);
+        }
         return CompilationMapper.mapToCompilationDtoFromCompilation(compilationRepository.save(compilation));
     }
 
