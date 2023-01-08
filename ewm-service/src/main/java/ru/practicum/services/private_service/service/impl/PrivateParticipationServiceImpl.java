@@ -22,6 +22,7 @@ import ru.practicum.user.model.User;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -46,8 +47,7 @@ public class PrivateParticipationServiceImpl implements PrivateParticipationServ
     @Transactional
     public ParticipationRequestDto confirmParticipation(long userId, long eventId, long reqId) {
         Event event = checkEventByHost(eventId, userId);
-        ParticipationRequest participationRequest = checkParticipation(reqId);
-        checkEquals(participationRequest, event);
+        ParticipationRequest participationRequest = checkEventAndParticipationEquals(reqId, event);
 
         if (event.getParticipantLimit() > 0 && event.getParticipantLimit() == getConfirmedRequests(List.of(eventId))) {
             participationRequest.setStatus(Status.REJECTED);
@@ -62,8 +62,7 @@ public class PrivateParticipationServiceImpl implements PrivateParticipationServ
     @Transactional
     public ParticipationRequestDto rejectParticipation(long userId, long eventId, long reqId) {
         Event event = checkEventByHost(eventId, userId);
-        ParticipationRequest participationRequest = checkParticipation(reqId);
-        checkEquals(participationRequest, event);
+        ParticipationRequest participationRequest = checkEventAndParticipationEquals(reqId, event);
         participationRequest.setStatus(Status.REJECTED);
         return ParticipationMapper.mapParticipationRequestDtoFromParticipationRequest(participationRequest);
     }
@@ -147,16 +146,14 @@ public class PrivateParticipationServiceImpl implements PrivateParticipationServ
         return confirmedRequests;
     }
 
-    private ParticipationRequest checkParticipation(long reqId) {
+    private ParticipationRequest checkEventAndParticipationEquals(long reqId, Event event) {
         ParticipationRequest participationRequest = participationRepository.findById(reqId).orElseThrow(() ->
                 new ParticipationNotFoundException("Заявка с id: " + reqId + " не найдена"));
-        return participationRequest;
-    }
 
-    private ParticipationRequest checkEquals(ParticipationRequest participationRequest, Event event) {
-        if (participationRequest.getEvent() != event.getId()) {
+        if (!Objects.equals(participationRequest.getEvent(), event.getId())) {
             throw new InvalidParticipationException("Данная заявка не относится к этому ивенту.");
         }
+
         return participationRequest;
     }
 }
