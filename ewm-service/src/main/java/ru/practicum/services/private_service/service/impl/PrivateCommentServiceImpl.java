@@ -51,14 +51,6 @@ public class PrivateCommentServiceImpl implements PrivateCommentService {
     }
 
     @Override
-    public List<ShortCommentDto> getAll(long eventId) {
-        List<ShortCommentDto> result = commentRepository.findAllByEventId(eventId).stream()
-                .map(CommentMapper::mapToShortCommentDtoFromComment)
-                .collect(Collectors.toList());
-        return result;
-    }
-
-    @Override
     @Transactional
     public String delete(long userId, long eventId, long commentId) {
         Comment comment = commentRepository.findByAuthorIdAndEventId(userId, eventId).orElseThrow(() ->

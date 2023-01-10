@@ -12,11 +12,7 @@ public interface PrivateCommentService {
 
     ShortCommentDto get(long userId, long eventId);
 
-    List<ShortCommentDto> getAll(long eventId);
-
     String delete(long userId, long eventId, long commentId);
-
-    //String deleteByAdmin(long commentId);
 
     ShortCommentDto update(long userId, long eventId, UpdateCommentDto updateCommentDto);
 
