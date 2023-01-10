@@ -4,8 +4,6 @@ import ru.practicum.comment.dto.NewCommentDto;
 import ru.practicum.comment.dto.ShortCommentDto;
 import ru.practicum.comment.dto.UpdateCommentDto;
 
-import java.util.List;
-
 public interface PrivateCommentService {
 
     ShortCommentDto add(long userId, long eventId, NewCommentDto newCommentDto);

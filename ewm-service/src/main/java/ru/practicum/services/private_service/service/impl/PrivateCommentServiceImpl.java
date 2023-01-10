@@ -19,7 +19,6 @@ import ru.practicum.services.private_service.service.PrivateCommentService;
 import ru.practicum.user.model.User;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
