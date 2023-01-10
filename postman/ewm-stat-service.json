@@ -391,7 +391,7 @@
               "\r",
               "\r",
               "pm.test(\"После выполнения запроса GET /events должно увеличиться количество хитов.\", function(){\r",
-              "    pm.expect(source.hits).equal(target.hits, 'Количество хитов после выполнения запроса GET /events должно быть больше на 1.');\r",
+              "    pm.expect(source.hits + 1).equal(target.hits, 'Количество хитов после выполнения запроса GET /events должно быть больше на 1.');\r",
               "});"
             ],
             "type": "text/javascript"
