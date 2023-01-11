@@ -14,7 +14,7 @@ public interface PrivateCommentService {
 
     ShortCommentDto update(long userId, long eventId, UpdateCommentDto updateCommentDto);
 
-    ShortCommentDto addLike(long userId, long eventId, long commentId);
+    ShortCommentDto addLike(long userId, long commentId);
 
-    ShortCommentDto addDislike(long userId, long eventId, long commentId);
+    ShortCommentDto addDislike(long userId, long commentId);
 }

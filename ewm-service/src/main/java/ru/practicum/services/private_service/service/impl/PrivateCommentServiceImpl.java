@@ -44,16 +44,14 @@ public class PrivateCommentServiceImpl implements PrivateCommentService {
 
     @Override
     public ShortCommentDto get(long userId, long eventId) {
-        Comment comment = commentRepository.findByAuthorIdAndEventId(userId, eventId).orElseThrow(() ->
-                new CommentNotFoundException("Коммент, написанный пользователем " + userId + " посту " + eventId + ", не найден."));
+        Comment comment = findByIds(userId, eventId);
         return CommentMapper.mapToShortCommentDtoFromComment(comment);
     }
 
     @Override
     @Transactional
     public String delete(long userId, long eventId, long commentId) {
-        Comment comment = commentRepository.findByAuthorIdAndEventId(userId, eventId).orElseThrow(() ->
-                new CommentNotFoundException("Коммент, написанный пользователем " + userId + " посту " + eventId + ", не найден."));
+        Comment comment = findByIds(userId, eventId);
         commentRepository.deleteById(commentId);
         return "Коммент удален";
     }
@@ -61,8 +59,7 @@ public class PrivateCommentServiceImpl implements PrivateCommentService {
     @Override
     @Transactional
     public ShortCommentDto update(long userId, long eventId, UpdateCommentDto updateCommentDto) {
-        Comment comment = commentRepository.findByAuthorIdAndEventId(userId, eventId).orElseThrow(() ->
-                new CommentNotFoundException("Коммент, написанный пользователем " + userId + " посту " + eventId + ", не найден."));
+        Comment comment = findByIds(userId, eventId);
         if (comment.getId() != updateCommentDto.getId()) {
             throw new CommentNotFoundException("Ид не равны.");
         }
@@ -72,9 +69,8 @@ public class PrivateCommentServiceImpl implements PrivateCommentService {
 
     @Override
     @Transactional
-    public ShortCommentDto addLike(long userId, long eventId, long commentId) {
+    public ShortCommentDto addLike(long userId, long commentId) {
         User user = checkUser(userId);
-        Event event = checkEvent(eventId);
         Comment comment = checkComment(commentId);
         List<User> likeList = comment.getLikes();
         List<User> dislikes = comment.getDislikes();
@@ -96,9 +92,8 @@ public class PrivateCommentServiceImpl implements PrivateCommentService {
 
     @Override
     @Transactional
-    public ShortCommentDto addDislike(long userId, long eventId, long commentId) {
+    public ShortCommentDto addDislike(long userId, long commentId) {
         User user = checkUser(userId);
-        Event event = checkEvent(eventId);
         Comment comment = checkComment(commentId);
         List<User> dislikeList = comment.getDislikes();
         List<User> likeList = comment.getLikes();
@@ -134,6 +129,12 @@ public class PrivateCommentServiceImpl implements PrivateCommentService {
     private Comment checkComment(long commentId) {
         Comment comment = commentRepository.findById(commentId).orElseThrow(() ->
                 new CommentNotFoundException("Такого коммента нет."));
+        return comment;
+    }
+
+    private Comment findByIds(long userId, long eventId) {
+        Comment comment = commentRepository.findByAuthorIdAndEventId(userId, eventId).orElseThrow(() ->
+                new CommentNotFoundException("Коммент, написанный пользователем " + userId + " посту " + eventId + ", не найден."));
         return comment;
     }
 }

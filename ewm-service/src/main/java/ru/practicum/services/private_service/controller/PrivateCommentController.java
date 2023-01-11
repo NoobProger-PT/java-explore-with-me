@@ -52,19 +52,17 @@ public class PrivateCommentController {
         return service.update(userId, eventId, updateCommentDto);
     }
 
-    @PostMapping("/event/{eventId}/user/{userId}/comment/{commentId}/like")
-    public ShortCommentDto addLike(@PathVariable @Positive Long eventId,
-                                   @PathVariable @Positive Long userId,
+    @PostMapping("/{commentId}/user/{userId}/like")
+    public ShortCommentDto addLike(@PathVariable @Positive Long userId,
                                    @PathVariable @Positive Long commentId) {
         log.info("Добавление лайка комменту.");
-        return service.addLike(userId, eventId, commentId);
+        return service.addLike(userId, commentId);
     }
 
-    @PostMapping("/event/{eventId}/user/{userId}/comment/{commentId}/dislike")
-    public ShortCommentDto addDislike(@PathVariable @Positive Long eventId,
-                                   @PathVariable @Positive Long userId,
-                                   @PathVariable @Positive Long commentId) {
+    @PostMapping("/{commentId}/user/{userId}/dislike")
+    public ShortCommentDto addDislike(@PathVariable @Positive Long userId,
+                                      @PathVariable @Positive Long commentId) {
         log.info("Добавление дислайка комменту.");
-        return service.addDislike(userId, eventId, commentId);
+        return service.addDislike(userId, commentId);
     }
 }
