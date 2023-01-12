@@ -27,7 +27,6 @@ public class AdminCommentServiceImpl implements AdminCommentService {
     @Override
     public FullCommentDto getById(long commentId) {
         Comment comment = getCommentIfExists(commentId);
-        commentRepository.deleteById(commentId);
         return CommentMapper.mapToFullCommentDtoFromComment(comment);
     }
 
