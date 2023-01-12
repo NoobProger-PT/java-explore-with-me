@@ -187,7 +187,7 @@ public class ErrorHandler {
     }
 
     @ExceptionHandler
-    public ResponseEntity<ErrorResponse> commentNitFound(CommentNotFoundException e) {
+    public ResponseEntity<ErrorResponse> commentNotFound(CommentNotFoundException e) {
         log.info("Коммент не найден. {}", e.getMessage());
         String exceptionName = e.getClass().getName();
         return new ResponseEntity<>(new ErrorResponse(List.of(exceptionName), e.getMessage(),

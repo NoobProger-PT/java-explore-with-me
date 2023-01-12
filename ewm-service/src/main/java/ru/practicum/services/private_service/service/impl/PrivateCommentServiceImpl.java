@@ -21,7 +21,7 @@ import ru.practicum.user.model.User;
 import java.util.List;
 
 @Service
-@Transactional(readOnly = true)
+@Transactional
 @RequiredArgsConstructor
 public class PrivateCommentServiceImpl implements PrivateCommentService {
 
@@ -31,10 +31,9 @@ public class PrivateCommentServiceImpl implements PrivateCommentService {
 
 
     @Override
-    @Transactional
     public ShortCommentDto add(long userId, long eventId, NewCommentDto newCommentDto) {
-        User user = checkUser(userId);
-        Event event = checkEvent(eventId);
+        User user = getUserIfExists(userId);
+        Event event = getEventIfExists(eventId);
         Comment comment = CommentMapper.mapToCommentFromNewCommentDto(newCommentDto);
         comment.setAuthorName(user.getName());
         comment.setAuthor(user);
@@ -44,22 +43,20 @@ public class PrivateCommentServiceImpl implements PrivateCommentService {
 
     @Override
     public ShortCommentDto get(long userId, long eventId) {
-        Comment comment = findByIds(userId, eventId);
+        Comment comment = findCommentByIds(userId, eventId);
         return CommentMapper.mapToShortCommentDtoFromComment(comment);
     }
 
     @Override
-    @Transactional
     public String delete(long userId, long eventId, long commentId) {
-        Comment comment = findByIds(userId, eventId);
+        Comment comment = findCommentByIds(userId, eventId);
         commentRepository.deleteById(commentId);
         return "Коммент удален";
     }
 
     @Override
-    @Transactional
     public ShortCommentDto update(long userId, long eventId, UpdateCommentDto updateCommentDto) {
-        Comment comment = findByIds(userId, eventId);
+        Comment comment = findCommentByIds(userId, eventId);
         if (comment.getId() != updateCommentDto.getId()) {
             throw new CommentNotFoundException("Ид не равны.");
         }
@@ -68,10 +65,9 @@ public class PrivateCommentServiceImpl implements PrivateCommentService {
     }
 
     @Override
-    @Transactional
     public ShortCommentDto addLike(long userId, long commentId) {
-        User user = checkUser(userId);
-        Comment comment = checkComment(commentId);
+        User user = getUserIfExists(userId);
+        Comment comment = getCommentIfExists(commentId);
         List<User> likeList = comment.getLikes();
         List<User> dislikes = comment.getDislikes();
         if (dislikes.contains(user)) {
@@ -91,10 +87,9 @@ public class PrivateCommentServiceImpl implements PrivateCommentService {
     }
 
     @Override
-    @Transactional
     public ShortCommentDto addDislike(long userId, long commentId) {
-        User user = checkUser(userId);
-        Comment comment = checkComment(commentId);
+        User user = getUserIfExists(userId);
+        Comment comment = getCommentIfExists(commentId);
         List<User> dislikeList = comment.getDislikes();
         List<User> likeList = comment.getLikes();
         if (likeList.contains(user)) {
@@ -114,25 +109,25 @@ public class PrivateCommentServiceImpl implements PrivateCommentService {
         return CommentMapper.mapToShortCommentDtoFromComment(comment);
     }
 
-    private User checkUser(long userId) {
+    private User getUserIfExists(long userId) {
         User user = usersRepository.findById(userId).orElseThrow(() ->
                 new UserNotFound("Пользователь с id: " + userId + " не найден"));
         return user;
     }
 
-    private Event checkEvent(long eventId) {
+    private Event getEventIfExists(long eventId) {
         Event event = eventsRepository.findById(eventId).orElseThrow(() ->
                 new EventNotFoundException("Такого ивента нет."));
         return event;
     }
 
-    private Comment checkComment(long commentId) {
+    private Comment getCommentIfExists(long commentId) {
         Comment comment = commentRepository.findById(commentId).orElseThrow(() ->
                 new CommentNotFoundException("Такого коммента нет."));
         return comment;
     }
 
-    private Comment findByIds(long userId, long eventId) {
+    private Comment findCommentByIds(long userId, long eventId) {
         Comment comment = commentRepository.findByAuthorIdAndEventId(userId, eventId).orElseThrow(() ->
                 new CommentNotFoundException("Коммент, написанный пользователем " + userId + " посту " + eventId + ", не найден."));
         return comment;

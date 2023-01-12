@@ -11,28 +11,27 @@ import ru.practicum.services.admin_service.service.AdminCommentService;
 import ru.practicum.services.private_service.repository.PrivateCommentRepository;
 
 @Service
-@Transactional(readOnly = true)
+@Transactional
 @RequiredArgsConstructor
 public class AdminCommentServiceImpl implements AdminCommentService {
 
     private final PrivateCommentRepository commentRepository;
 
     @Override
-    @Transactional
     public String deleteComment(long commentId) {
-        Comment comment = checkComment(commentId);
+        Comment comment = getCommentIfExists(commentId);
         commentRepository.deleteById(commentId);
         return "Коммент принудительно удален администратром.";
     }
 
     @Override
     public FullCommentDto getById(long commentId) {
-        Comment comment = checkComment(commentId);
+        Comment comment = getCommentIfExists(commentId);
         commentRepository.deleteById(commentId);
         return CommentMapper.mapToFullCommentDtoFromComment(comment);
     }
 
-    private Comment checkComment(long commentId) {
+    private Comment getCommentIfExists(long commentId) {
         Comment comment = commentRepository.findById(commentId).orElseThrow(() ->
                 new CommentNotFoundException("Коммент не найден"));
         return comment;
