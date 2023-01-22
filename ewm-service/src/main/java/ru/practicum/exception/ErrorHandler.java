@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import ru.practicum.exception.category_exception.CantDeleteCategoryException;
 import ru.practicum.exception.category_exception.CategoryAlreadyExistsException;
 import ru.practicum.exception.category_exception.CategoryNotFoundException;
+import ru.practicum.exception.comment_exception.CommentNotFoundException;
 import ru.practicum.exception.compilation.CompilationNutFoundException;
 import ru.practicum.exception.event_exception.EventNotFoundException;
 import ru.practicum.exception.event_exception.PublishedEventException;
@@ -183,6 +184,15 @@ public class ErrorHandler {
         return new ResponseEntity<>(new ErrorResponse(List.of(exceptionName), e.getMessage(),
                 "Почта занята.", "CONFLICT", LocalDateTime.now()),
                 HttpStatus.CONFLICT);
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<ErrorResponse> commentNotFound(CommentNotFoundException e) {
+        log.info("Коммент не найден. {}", e.getMessage());
+        String exceptionName = e.getClass().getName();
+        return new ResponseEntity<>(new ErrorResponse(List.of(exceptionName), e.getMessage(),
+                "Данного коммента нет.", "NOT_FOUND", LocalDateTime.now()),
+                HttpStatus.NOT_FOUND);
     }
 
     @ExceptionHandler
