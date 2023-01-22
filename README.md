@@ -1,4 +1,6 @@
 # java-explore-with-me
-Template repository for ExploreWithMe project.
-linck: "https://github,com/NoobProger-PT/java-explore-with-me/pull/3"
-после гитхаб поставить "точку"
+
+Аналог Tinder-а для дружеских встреч
+Приложение, которое поможет найти 
+человека для поездки в путешествие, 
+похода в кино или другого досуга.
